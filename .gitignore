@@ -1,0 +1,6 @@
+.env
+.venv/
+__pycache__/
+screenshots/
+architecture.excalidraw
+.github/skills/excalidraw-diagram/

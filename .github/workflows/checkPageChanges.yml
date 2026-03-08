@@ -1,0 +1,75 @@
+name: Page Change Checker
+
+on:
+  schedule:
+    # Runs every 5 minutes
+    - cron: "*/5 * * * *"
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write   # needed to commit snapshot
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code (main)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Restore snapshot from data branch
+        run: |
+          git fetch origin data
+          git checkout origin/data -- previous_snapshot.txt 2>/dev/null || echo "No snapshot yet"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Copilot CLI and Playwright MCP
+        run: npm install @github/copilot @playwright/mcp@latest
+
+      - name: Install Playwright Chrome
+        run: npx playwright install --with-deps chrome
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run agent
+        env:
+          GITHUB_TOKEN: ${{ secrets.COPILOT_TOKEN }}
+          COPILOT_CLI_PATH: ${{ github.workspace }}/node_modules/@github/copilot-linux-x64/copilot
+          MAIL_SERVER: ${{ secrets.MAIL_SERVER }}
+          MAIL_PORT: ${{ secrets.MAIL_PORT }}
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+        run: python checkPageChanges.py
+
+      - name: Commit snapshot to data branch
+        run: |
+          if [ ! -f previous_snapshot.txt ]; then
+            echo "No snapshot to commit"
+            exit 0
+          fi
+          # Stage snapshot, stash it, switch to data, apply, commit, push
+          cp previous_snapshot.txt /tmp/previous_snapshot.txt
+          git fetch origin data
+          git checkout -f -B data origin/data
+          cp /tmp/previous_snapshot.txt previous_snapshot.txt
+          git add previous_snapshot.txt
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: update pageToCheck snapshot [skip ci]"
+          git push origin data
