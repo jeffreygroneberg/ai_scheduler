@@ -54,6 +54,22 @@ session = await client.create_session({
 })
 ```
 
+### Built-in Tools
+
+By default, the Copilot SDK operates with `--allow-all`, enabling all first-party tools from the Copilot CLI. This gives the agent access to a rich set of capabilities out of the box:
+
+| Category | Tools | Description |
+|----------|-------|-------------|
+| **File System** | `view`, `edit`, `create_file`, `glob` | Read, write, create, and find files in the working directory |
+| **Shell** | `bash` | Execute shell commands |
+| **Search** | `grep` | Search file contents with pattern matching |
+| **Web** | `web_fetch` | Fetch webpage content via HTTP (used by this agent for page monitoring) |
+| **User Interaction** | `ask_user` | Request input from the user (enabled via `on_user_input_request` handler) |
+
+You can control which tools are available using `available_tools` (whitelist) or `excluded_tools` (blacklist) in the session config. Setting `available_tools: []` disables all built-in tools — useful when you want to provide only custom tools.
+
+This agent uses `web_fetch` to retrieve page content and relies on three additional custom tools for its domain-specific logic.
+
 ### Custom Tools (`@define_tool`)
 
 | Tool | Purpose |
