@@ -2,8 +2,8 @@ name: Page Change Checker
 
 on:
   schedule:
-    # Runs every 5 minutes
-    - cron: "*/5 * * * *"
+    # Runs every hour
+    - cron: "0 * * * *"
   workflow_dispatch: # Allow manual trigger
 
 permissions:
