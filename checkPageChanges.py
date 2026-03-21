@@ -360,13 +360,13 @@ async def main() -> None:
     await client.start()
 
     try:
-        session = await client.create_session({
-            "model": MODEL,
-            "reasoning_effort": REASONING_EFFORT,
-            "streaming": True,
-            "on_permission_request": PermissionHandler.approve_all,
-            "tools": [CompareContentOfPage, SendMailTo, ReportResult],
-            "mcp_servers": {
+        session = await client.create_session(
+            model=MODEL,
+            reasoning_effort=REASONING_EFFORT,
+            streaming=True,
+            on_permission_request=PermissionHandler.approve_all,
+            tools=[CompareContentOfPage, SendMailTo, ReportResult],
+            mcp_servers={
                 "playwright": {
                     "type": "local",
                     "command": "npx",
@@ -378,11 +378,11 @@ async def main() -> None:
                     "tools": ["browser_navigate", "browser_take_screenshot"],
                 },
             },
-        })
+        )
 
         done = asyncio.Event()
         session.on(_make_event_handler(done))
-        await session.send({"prompt": _build_prompt()})
+        await session.send(_build_prompt())
         await done.wait()
     finally:
         await client.stop()
