@@ -28,7 +28,7 @@ from email import encoders
 from pathlib import Path
 from typing import Optional
 
-from copilot import CopilotClient, PermissionHandler
+from copilot import CopilotClient, PermissionHandler, SubprocessConfig
 from copilot.tools import define_tool
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
@@ -356,7 +356,7 @@ async def main() -> None:
 
     SCREENSHOT_DIR.mkdir(exist_ok=True)
 
-    client = CopilotClient(client_opts)
+    client = CopilotClient(SubprocessConfig(**client_opts))
     await client.start()
 
     try:
